@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý máy in</title>
+    <link rel="stylesheet" href="/index.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <div class="header">
+      <h2>Quản lý máy in</h2>
+      <input type="file" id="fileInput" accept=".xlsx, .xls" />
+    </div>
+
+    <div class="table-wrapper">
+      <table id="printerTable">
+        <thead>
+          <tr>
+            <th>Phòng ban</th>
+            <th>Phòng viết tắt</th>
+            <th>Người đề nghị</th>
+            <th>Cán bộ</th>
+            <th>Đại diện đơn vị sử dụng</th>
+            <th>Đại diện đơn vị sử dụng nhân viên</th>
+            <th>Ngày</th>
+            <th>Tháng</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="modal" class="modal">
+      <h3>Sửa trước khi in</h3>
+      <iframe
+        id="modalIframe"
+        src=""
+        style="width: 100%; height: 85%; border: none"
+      ></iframe>
+      <div
+        style="
+          display: flex;
+          justify-content: end;
+          gap: 20px;
+          margin-right: 50px;
+        "
+      >
+        <button onclick="printIframe()">In hồ sơ</button>
+        <button onclick="closeModal()">Đóng</button>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            const filteredData = rows
+              .slice(3) // Bỏ qua dòng tiêu đề
+              .map((row) => ({
+                // name: row[1], // Cột "Tên máy in"
+                department: row[2], // Cột "Phòng ban"
+                shortDepartment: row[3], // Cột "Phòng viết tắt"
+                requester: row[4], // Cột "Người đề nghị"
+                officer: row[5], // Cột "Cán bộ"
+                representative: row[6], // Cột "Đại diện đơn vị sử dụng"
+                representativeStaff: row[7], // Cột "Đại diện đơn vị sử dụng nhan vien"
+                daysW4: row[8], // Cột "Đại diện đơn vị sử dụng nhan vien"
+                monthW4: row[9], // Cột "Đại diện đơn vị sử dụng nhan vien"
+              }))
+              .filter(
+                (row) =>
+                  // row.name &&
+                  row.department &&
+                  row.shortDepartment &&
+                  row.requester &&
+                  row.officer &&
+                  row.representative &&
+                  row.representativeStaff &&
+                  row.daysW4 &&
+                  row.monthW4
+              );
+
+            saveDataToLocalStorage(filteredData);
+            renderTable(filteredData);
+          };
+          reader.readAsArrayBuffer(file);
+        });
+
+      function saveDataToLocalStorage(data) {
+        localStorage.setItem("printerData", JSON.stringify(data));
+      }
+
+      function loadDataFromLocalStorage() {
+        const data = localStorage.getItem("printerData");
+        if (data) {
+          renderTable(JSON.parse(data));
+        }
+      }
+
+      function renderTable(data) {
+        const tbody = document.querySelector("#printerTable tbody");
+        tbody.innerHTML = "";
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            
+            <td>${row.department}</td>
+            <td>${row.shortDepartment}</td>
+            <td>${row.requester}</td>
+            <td>${row.officer}</td>
+            <td>${row.representative}</td>
+            <td>${row.representativeStaff}</td>
+            <td>${row.daysW4}</td>
+            <td>${row.monthW4}</td>
+            <td><button onclick="openModal( '${row.department}', '${row.shortDepartment}', '${row.requester}', '${row.officer}', '${row.representative}', '${row.representativeStaff}','${row.daysW4}','${row.monthW4}' )">Xuất hồ sơ</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function openModal(
+        department,
+        shortDepartment,
+        requester,
+        officer,
+        representative,
+        representativeStaff,
+        daysW4,
+        monthW4
+      ) {
+        const selectedData = {
+          department,
+          shortDepartment,
+          requester,
+          officer,
+          representative,
+          representativeStaff,
+          daysW4,
+          monthW4,
+        };
+
+        // Lưu vào localStorage
+        localStorage.setItem("selectedPrinter", JSON.stringify(selectedData));
+
+        // Mở modal với trang A4.html
+        const iframe = document.getElementById("modalIframe");
+        iframe.src = `A4.html`;
+
+        document.getElementById("modal").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("modal").classList.remove("active");
+      }
+
+      function printIframe() {
+        const iframe = document.getElementById("modalIframe").contentWindow;
+        iframe.focus();
+        iframe.print();
+      }
+
+      // Gọi khi trang load lại
+      document.addEventListener("DOMContentLoaded", loadDataFromLocalStorage);
+    </script>
+  </body>
+</html>
