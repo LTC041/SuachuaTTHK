@@ -18,6 +18,18 @@ body {
   font-size: 14pt;
 }
 
+.fix-same-word {
+  margin: 0;
+  text-indent: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
 p {
   margin: 0;
 }

@@ -246,33 +246,15 @@
             </p>
           </li>
           <li>
-            <div style="font-size: 14pt; line-height: 1.5">
-              <p
-                contenteditable="true"
-                style="
-                  margin: 0;
-                  text-indent: 0;
-                  white-space: pre-wrap;
-                  word-break: break-word;
-                  outline: none;
-                "
-              >
+            <div style="font-size: 14pt; line-height: 1.3">
+              <p class="fix-same-word" contenteditable="true">
                 4. Tình trạng hiện tại của thiết bị:
               </p>
             </div>
           </li>
           <li>
-            <div style="font-size: 14pt; line-height: 1.5">
-              <p
-                contenteditable="true"
-                style="
-                  margin: 0;
-                  text-indent: 0;
-                  white-space: pre-wrap;
-                  word-break: break-word;
-                  outline: none;
-                "
-              >
+            <div style="font-size: 14pt; line-height: 1.3">
+              <p contenteditable="true" class="fix-same-word">
                 5. Phương án thực hiện sửa chữa:
               </p>
             </div>
@@ -465,9 +447,15 @@
         <p class="text-title-14" style="margin-top: 6pt">
           1. Bên giao: <span class="department"></span>
         </p>
-        <div class="flex-beetwen">
+        <div class="flex-beetwen ben-giao-requester">
           <p class="text-title-14" style="margin-top: 6pt">
             Ông (Bà): <span class="requester"></span>
+          </p>
+          <span>Chức vụ: Nhân viên</span>
+        </div>
+        <div class="flex-beetwen ben-giao-ngocnga">
+          <p class="text-title-14" style="margin-top: 6pt">
+            Ông (Bà): Đặng Thị Ngọc Ngà</span>
           </p>
           <span>Chức vụ: Nhân viên</span>
         </div>
@@ -477,6 +465,15 @@
         <div class="flex-beetwen">
           <p class="text-title-14" style="margin-top: 6pt">
             Ông (Bà): Đào Thị Thanh
+          </p>
+          <span>Chức vụ: Nhân viên</span>
+        </div>
+        <p class="text-title-14" style="margin-top: 6pt">
+          3. Đại diện cơ quan chức năng (Tài chính):
+        </p>
+        <div class="flex-beetwen">
+          <p class="text-title-14" style="margin-top: 6pt">
+            Ông (Bà): Dương Thị Lan Thu
           </p>
           <span>Chức vụ: Nhân viên</span>
         </div>
@@ -531,9 +528,23 @@
       </div>
 
       <div class="footer-page flex-around">
-        <div style="justify-items: center" class="left-ft-page flex-column">
+        <div
+          style="justify-items: center"
+          class="left-ft-page flex-column ben-giao-requester"
+        >
           <p>BÊN GIAO</p>
           <p class="requester"></p>
+        </div>
+        <div
+          style="justify-items: center"
+          class="left-ft-page flex-column ben-giao-ngocnga"
+        >
+          <p>BÊN GIAO</p>
+          <p>Đặng Thị Ngọc Ngà</p>
+        </div>
+        <div style="justify-items: center" class="left-ft-page flex-column">
+          <p>KẾ TOÁN TÀI SẢN</p>
+          <p>Dương Thị Lan Thu</p>
         </div>
         <div class="right-ft-page flex-column">
           <p>BÊN NHẬN</p>
@@ -691,6 +702,40 @@
           alert("Phải có ít nhất một dòng!");
         }
       }
+    </script>
+
+    <!-- Chỉnh phần ký của biên bản thu hồi -->
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const requesterElements = document.querySelectorAll('.requester');
+    
+        requesterElements.forEach(requesterEl => {
+          const name = requesterEl.textContent.trim();
+    
+          // Tìm phần tử cha chứa .requester (có class ben-giao-requester)
+          const benGiaoRequester = requesterEl.closest('.ben-giao-requester');
+    
+          // Tìm phần tử .ben-giao-ngocnga cùng cấp (nằm gần .ben-giao-requester trong DOM)
+          let benGiaoNgocNga = null;
+          let sibling = benGiaoRequester?.nextElementSibling;
+    
+          while (sibling) {
+            if (sibling.classList.contains('ben-giao-ngocnga')) {
+              benGiaoNgocNga = sibling;
+              break;
+            }
+            sibling = sibling.nextElementSibling;
+          }
+    
+          if (name === 'Dương Thị Lan Thu') {
+            benGiaoRequester?.classList.add('hidden');
+            benGiaoNgocNga?.classList.remove('hidden');
+          } else {
+            benGiaoRequester?.classList.remove('hidden');
+            benGiaoNgocNga?.classList.add('hidden');
+          }
+        });
+      });
     </script>
   </body>
 </html>
