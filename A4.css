@@ -9,6 +9,27 @@
   }
 }
 
+#table3,
+#table1,
+#table2,
+#table4 {
+  table-layout: auto !important; /* Cho phép cột tự co theo nội dung */
+}
+
+#table3 th,
+#table3 td,
+#table1 th,
+#table1 td,
+#table2 th,
+#table2 td,
+#table4 th,
+#table4 td {
+  white-space: normal !important; /* Cho phép ngắt dòng theo nội dung (khi có <br> hoặc dấu cách) */
+  word-break: keep-all !important; /* Không ngắt từ giữa chừng */
+  overflow-wrap: break-word !important; /* Ngắt nếu có khoảng trắng dài */
+  vertical-align: middle;
+}
+
 body {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;

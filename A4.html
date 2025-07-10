@@ -369,9 +369,9 @@
               </tr>
               <tr style="text-align: center">
                 <td>1</td>
+                <td contenteditable="true" style="word-break: break-word; white-space: nowrap"></td>
                 <td contenteditable="true" style="word-break: break-word"></td>
-                <td contenteditable="true" style="word-break: break-word"></td>
-                <td contenteditable="true" style="word-break: break-word;white-space: nowrap"></td>
+                <td contenteditable="true" style="word-break: break-word;white-space: nowrap; width: auto;"></td>
                 <td
                   contenteditable="true"
                   style="word-break: break-word"
@@ -737,5 +737,22 @@
         });
       });
     </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('[contenteditable="true"]').forEach(function (el) {
+      el.addEventListener("paste", function (e) {
+        e.preventDefault();
+
+        // Lấy nội dung từ clipboard dưới dạng plain text (không có font-size, style)
+        const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+
+        // Dán lại vào vị trí con trỏ chuột
+        document.execCommand("insertText", false, text);
+      });
+    });
+  });
+</script>
+
   </body>
 </html>
