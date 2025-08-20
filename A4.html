@@ -111,7 +111,7 @@
         </div>
         <div class="flex-column plan-office">
           <p style="height: 140px">Phòng kế hoạch</p>
-          <p >Phan Nhật Mạnh</p>
+          <p class="color-text-kh">Phan Nhật Mạnh</p>
         </div>
         <div style="justify-items: center" class="flex-column none-sign">
           <p
@@ -130,7 +130,7 @@
             class="text-title-12"
             style="border-bottom: 1px solid #000; margin-bottom: 10px"
           >
-            Phòng Kế hoạch
+            Phòng Bảo đảm kỹ thuật
           </p>
         </div>
 
@@ -285,7 +285,7 @@
       <div class="footer-page flex-beetwen">
         <div style="justify-items: center" class="left-ft-page flex-column">
           <p class="break-after-trung-tam">PHÒNG KẾ HOẠCH</p>
-          <p >Phan Nhật Mạnh</p>
+          <p class="color-text-kh">Phan Nhật Mạnh</p>
         </div>
         <div style="justify-items: center" class="left-ft-page flex-column">
           <p class="break-after-trung-tam">PHÒNG BĐKT</p>
@@ -662,33 +662,84 @@
 
     <!-- thêm dòng cho bảng -->
     <script>
-      function addRow(tableId) {
-        const table = document.getElementById(tableId);
-        const tbody = table.querySelector("tbody");
-        const lastRow = tbody.rows[tbody.rows.length - 1];
-        const newRow = lastRow.cloneNode(true);
+  // Lấy danh sách các hàng dữ liệu (bỏ qua header th/thead)
+  function getDataRows(table) {
+    return Array.from(table.rows).filter(r => r.querySelectorAll("td").length > 0);
+  }
 
-        // Reset nội dung
-        for (let i = 1; i < newRow.cells.length; i++) {
-          const cell = newRow.cells[i];
-          const input = cell.querySelector("input");
-          if (input) input.value = "";
-          else cell.innerText = "";
-        }
+  function addRow(tableId) {
+    const table = document.getElementById(tableId);
+    const dataRows = getDataRows(table);
+    if (dataRows.length === 0) return;
 
-        tbody.appendChild(newRow);
+    const lastRow = dataRows[dataRows.length - 1];
+    const newRow = lastRow.cloneNode(true);
+
+    const nextIndex = dataRows.length + 1; // STT mới
+
+    // Duyệt từng ô để reset giá trị nhưng giữ nguyên thuộc tính
+    Array.from(newRow.cells).forEach((cell, ci) => {
+      const hasForm = cell.querySelector("input, select, textarea");
+      const isContentEditable = cell.hasAttribute("contenteditable");
+
+      // Cột STT (ô đầu tiên)
+      if (ci === 0) {
+        cell.textContent = String(nextIndex);
+        return;
       }
 
-      function deleteRow(tableId) {
-        const table = document.getElementById(tableId);
-        const tbody = table.querySelector("tbody");
-        if (tbody.rows.length > 1) {
-          tbody.deleteRow(tbody.rows.length - 1);
+      // Nếu có form control -> reset
+      if (hasForm) {
+        cell.querySelectorAll("input, select, textarea").forEach((el, i) => {
+          // Reset giá trị theo loại
+          if (el.tagName === "INPUT") {
+            const type = (el.type || "text").toLowerCase();
+            if (type === "checkbox" || type === "radio") {
+              el.checked = false;
+            } else {
+              el.value = "";
+            }
+          } else if (el.tagName === "SELECT") {
+            el.selectedIndex = -1; // bỏ chọn; nếu muốn chọn option đầu: =0
+          } else if (el.tagName === "TEXTAREA") {
+            el.value = "";
+          }
+
+          // Làm mới id/name để tránh trùng lặp
+          // Ví dụ: input1 -> input1_3_0 (row 3, control 0)
+          const baseId = el.id || el.name || el.getAttribute("data-id") || el.tagName.toLowerCase();
+          const newSuffix = `_${nextIndex}_${i}`;
+          if (el.id) el.id = baseId + newSuffix;
+          if (el.name) el.name = el.name + newSuffix;
+          // Nếu label[for] trỏ tới id cũ thì bạn có thể cập nhật thêm ở đây (nếu có label trong cell)
+        });
+      } else {
+        // Không có form control
+        if (isContentEditable) {
+          cell.textContent = ""; // xoá text nhưng giữ contenteditable
         } else {
-          alert("Phải có ít nhất một dòng!");
+          // Ô chỉ có text thuần → xoá text
+          cell.textContent = "";
         }
       }
-    </script>
+    });
+
+    // Thêm dòng vào ngay sau dòng dữ liệu cuối
+    lastRow.parentNode.insertBefore(newRow, lastRow.nextSibling);
+  }
+
+  function deleteRow(tableId) {
+    const table = document.getElementById(tableId);
+    const dataRows = getDataRows(table);
+    if (dataRows.length > 1) {
+      const lastRow = dataRows[dataRows.length - 1];
+      lastRow.parentNode.removeChild(lastRow);
+    } else {
+      alert("Phải có ít nhất một dòng!");
+    }
+  }
+</script>
+
 
     <!-- Chỉnh phần ký của biên bản thu hồi -->
     <script>
@@ -725,18 +776,37 @@
     </script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll('[contenteditable="true"]').forEach(function (el) {
-      el.addEventListener("paste", function (e) {
-        e.preventDefault();
+  // Plain-paste cho BẤT KỲ phần tử có contenteditable="true"
+  document.addEventListener("paste", function (e) {
+    // Tìm phần tử contenteditable gần nhất chứa target
+    const editable = e.target.closest('[contenteditable="true"]');
+    if (!editable) return; // không phải vùng contenteditable → bỏ qua
 
-        // Lấy nội dung từ clipboard dưới dạng plain text (không có font-size, style)
-        const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    // (Tuỳ chọn) giới hạn phạm vi, ví dụ chỉ trong #table1:
+    // if (!editable.closest('#table1')) return;
 
-        // Dán lại vào vị trí con trỏ chuột
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+
+    // Chèn text vào đúng vị trí con trỏ (ưu tiên Range API, fallback execCommand)
+    if (window.getSelection && document.createRange) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) {
+        editable.focus();
         document.execCommand("insertText", false, text);
-      });
-    });
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      // Đưa caret về cuối đoạn vừa chèn
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      // Fallback cho trình duyệt cũ
+      document.execCommand("insertText", false, text);
+    }
   });
 </script>
 
